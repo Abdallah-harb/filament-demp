@@ -63,7 +63,6 @@ class OrderChart extends ChartWidget
         $currentYear = now()->year;
         $years = [];
 
-        // Generate years from 2020 to current year
         for ($year = 2020; $year <= $currentYear; $year++) {
             $years[$year] = $year;
         }

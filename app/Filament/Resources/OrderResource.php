@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use App\Enum\PaymentStatusEnum;
 use App\Filament\Resources\OrderResource\Pages;
-use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Models\Order;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,8 +12,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+
 
 class OrderResource extends Resource
 {
@@ -79,7 +77,8 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('total_quantity')
                     ->label('Quantity')
                     ->alignCenter()
-                    ->getStateUsing(fn ($record) => $record->orderDetails->sum('quantity')),                Tables\Columns\TextColumn::make('total_amount')->label('Total')->money('EGP')->sortable(),
+                    ->getStateUsing(fn ($record) => $record->orderDetails->sum('quantity')),
+                Tables\Columns\TextColumn::make('total_amount')->label('Total')->money('EGP')->sortable(),
                 Tables\Columns\TextColumn::make('discount_amount')->label('Discount')->money('EGP')->sortable(),
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Payment Status')
@@ -151,26 +150,9 @@ class OrderResource extends Resource
 
                 Infolists\Components\Section::make('Order Items')
                     ->schema([
-                        Infolists\Components\RepeatableEntry::make('orderDetails')
+                        Infolists\Components\ViewEntry::make('orderDetails')
                             ->label('')
-                            ->schema([
-                                Infolists\Components\TextEntry::make('product.name')
-                                    ->label('Product'),
-                                Infolists\Components\TextEntry::make('price')
-                                    ->label('Price')
-                                    ->money('EGP'),
-                                Infolists\Components\TextEntry::make('quantity')
-                                    ->label('Quantity'),
-                                Infolists\Components\TextEntry::make('discount')
-                                    ->label('Discount')
-                                    ->money('EGP'),
-                                Infolists\Components\TextEntry::make('total')
-                                    ->label('Total')
-                                    ->money('EGP')
-                                    ->weight('bold'),
-                            ])
-                            ->columns(5)
-                            ->contained(false),
+                            ->view('filament.infolists.order-items-table'),
                     ]),
 
                 Infolists\Components\Section::make('Order Summary')

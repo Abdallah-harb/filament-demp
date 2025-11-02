@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use App\Enum\ProductStatusEnum;
 use App\Filament\Resources\ProductResource\Pages;
-use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Filament\Resources\ProductResource\RelationManagers\TagsRelationManager;
 use App\Models\Product;
 use Filament\Forms;
@@ -16,7 +15,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductResource extends Resource
 {
@@ -45,7 +43,9 @@ class ProductResource extends Resource
                     ->required(),
 
                 Forms\Components\Select::make('tags')->multiple()
-                    ->relationship('tags', 'name')
+                    ->relationship(titleAttribute: 'name')
+                    ->preload()
+                    ->required()
                     ->required(),
 
                 FileUpload::make('attachment')->multiple()->directory('products')
