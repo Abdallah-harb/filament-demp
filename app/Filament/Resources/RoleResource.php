@@ -20,7 +20,7 @@ class RoleResource extends Resource
     protected static ?string $model = Role::class;
     protected static ?int $navigationSort = 6;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
     public static function form(Form $form): Form
     {
@@ -48,6 +48,8 @@ class RoleResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('id', '!=', 1))
             ->columns([
                 Tables\Columns\TextColumn::make('name')->sortable()
                     ->searchable(),
