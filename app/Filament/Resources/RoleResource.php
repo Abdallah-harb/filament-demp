@@ -7,6 +7,7 @@ use App\Filament\Resources\RoleResource\RelationManagers;
 use App\Models\Role;
 use Filament\Forms;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -28,9 +29,19 @@ class RoleResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->unique(ignoreRecord: true)
-                    ->maxLength(100),
-                CheckboxList::make('permissions')
-                    ->relationship(titleAttribute: 'name')
+                    ->maxLength(100)->columnSpanFull(),
+                Section::make('Permissions')
+                    ->description('Select the permissions for this role')
+                    ->schema([
+                        CheckboxList::make('permissions')
+                            ->label('')
+                            ->options(fn () => \Spatie\Permission\Models\Permission::all()->pluck('name', 'id'))
+                            ->columns(3)
+                            ->gridDirection('row')
+                            ->bulkToggleable()
+                            ->required()
+                    ])
+
             ]);
     }
 
@@ -38,17 +49,52 @@ class RoleResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('users_count')
+                    ->label('Users')
+                    ->counts('users')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime('M d, Y')
+                    ->sortable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function (Tables\Actions\DeleteAction $action, Role $record) {
+                        if ($record->hasUsers()) {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('Cannot delete role')
+                                ->body("This role is assigned to {$record->getUsersCount()} user(s). Please remove the role from all users before deleting.")
+                                ->persistent()
+                                ->send();
+
+                            $action->cancel();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function (Tables\Actions\DeleteBulkAction $action, $records) {
+                            $rolesWithUsers = $records->filter(fn ($role) => $role->hasUsers());
+
+                            if ($rolesWithUsers->isNotEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->danger()
+                                    ->title('Cannot delete roles')
+                                    ->body("Some roles are assigned to users: " . $rolesWithUsers->pluck('name')->join(', ') . ". Please remove these roles from all users before deleting.")
+                                    ->persistent()
+                                    ->send();
+
+                                $action->cancel();
+                            }
+                        }),
                 ]),
             ]);
     }

@@ -13,8 +13,19 @@ class Role extends SpatieRole
     ];
 
 
-    public function permissions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    /**
+     * Check if the role is assigned to any users
+     */
+    public function hasUsers(): bool
     {
-        return $this->hasMany(Permission::class, 'role_id', 'id');
+        return $this->users()->exists();
+    }
+
+    /**
+     * Get the count of users assigned to this role
+     */
+    public function getUsersCount(): int
+    {
+        return $this->users()->count();
     }
 }
